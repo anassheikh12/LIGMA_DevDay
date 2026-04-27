@@ -1,0 +1,7 @@
+{
+  "name": "ligma",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ]
+}
