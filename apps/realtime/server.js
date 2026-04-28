@@ -47,7 +47,8 @@ server.on("upgrade", (request, socket, head) => {
 wss.on("connection", (ws, req) => {
   // The room name comes from the URL path, e.g. /yjs/ligma-room
   setupWSConnection(ws, req);
-  console.log(`[yjs] new connection on ${req.url}`);
+  const docName = req.url.slice(1);
+  console.log(`[LIGMA-SYNC] Connection established to room: ${docName}`);
 });
 
 // ── Start ───────────────────────────────────────────────────────────────

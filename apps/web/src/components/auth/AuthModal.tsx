@@ -51,7 +51,7 @@ export default function AuthModal({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center px-4"
       style={{ backgroundColor: "rgba(35, 31, 32, 0.5)" }}
       role="dialog"
       aria-modal="true"
@@ -59,7 +59,7 @@ export default function AuthModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-surface-1 rounded-lg p-10 max-w-sm w-full"
+        className="relative bg-white border-2 border-neutral-900 shadow-[6px_6px_0px_0px_#171717] p-10 max-w-sm w-full"
       >
         <button
           type="button"

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tldraw/tldraw": "^4.5.10",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
@@ -19,6 +20,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "tailwind-merge": "^3.5.0",
+    "tldraw": "^4.5.10",
     "uuid": "^14.0.0",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.30"

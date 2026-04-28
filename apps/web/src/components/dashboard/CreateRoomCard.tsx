@@ -4,79 +4,57 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 
-const USE_MOCK_API = true;
-
-type CreateRoomResponse = { roomId: string };
-
-async function createRoom(name: string): Promise<CreateRoomResponse> {
-  if (USE_MOCK_API) {
-    await new Promise((r) => setTimeout(r, 400));
-    return { roomId: "demo-" + Math.random().toString(36).slice(2, 8) };
-  }
-
-  const res = await fetch("/api/rooms", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name }),
-  });
-
-  if (!res.ok) throw new Error("Failed to create room. Please try again.");
-  return res.json();
-}
-
 export default function CreateRoomCard() {
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name.trim() || loading) return;
+    if (!title.trim() || loading) return;
 
     setLoading(true);
-    setError("");
-
     try {
-      const { roomId } = await createRoom(name.trim());
-      router.push(`/room/${roomId}`);
+      const res = await fetch("/api/rooms/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: title.trim() }),
+      });
+
+      if (!res.ok) throw new Error("Failed to create room");
+      const room = await res.json();
+      router.push(`/dashboard/${room.roomId}`);
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to create room. Please try again.",
-      );
+      console.error(err);
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-surface-1 rounded-lg p-8">
-      <h2 className="font-display text-2xl font-bold text-ink mb-2">
-        Start a new room
+    <div className="bg-white border-2 border-black p-8 shadow-[6px_6px_0px_0px_#000] flex-1">
+      <h2 className="font-display text-2xl font-black text-ink mb-2 uppercase italic tracking-tight">
+        Initiate Session
       </h2>
       <p className="text-ink-muted text-[15px] mb-6">
-        Create a fresh canvas for your team
+        Launch a new collaborative workspace
       </p>
 
-      <form onSubmit={handleSubmit} className="flex gap-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Sprint Planning Oct 24"
-          className="flex-1 bg-surface-1 border border-border text-ink px-4 py-3 rounded-md text-[15px] focus:outline-none focus:border-ink focus:border-2 placeholder:text-ink-subtle"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="SESSION TITLE..."
+          className="w-full bg-white border-2 border-black text-ink px-4 py-3 rounded-none text-[15px] font-bold focus:outline-none placeholder:text-neutral-400"
         />
         <button
           type="submit"
-          disabled={loading || !name.trim()}
-          className="bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-semibold px-6 rounded-pill transition-all duration-120 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading || !title.trim()}
+          className="w-full bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-black py-3.5 rounded-none border-2 border-black shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50"
         >
-          {loading ? "Creating..." : "Create"}
+          {loading ? "INITIALIZING..." : "LAUNCH //"}
         </button>
       </form>
-
-      {error && <p className="text-danger text-sm mt-4">{error}</p>}
     </div>
   );
 }

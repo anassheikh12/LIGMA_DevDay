@@ -13,7 +13,7 @@ function resolveRedirect(value: string | null): string {
 }
 
 const inputClass =
-  "w-full bg-surface-1 border border-border text-ink px-4 py-3 rounded-md text-[15px] focus:outline-none focus:border-ink focus:border-2 placeholder:text-ink-subtle mb-5";
+  "w-full bg-white border-2 border-neutral-900 text-ink px-4 py-3 rounded-none text-[15px] focus:outline-none focus:ring-0 placeholder:text-neutral-400 mb-5";
 
 const labelClass = "text-sm font-medium text-ink mb-2 block";
 
@@ -91,7 +91,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={isDisabled}
-        className="w-full bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-semibold py-3.5 rounded-pill transition-all duration-120 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-bold py-3.5 rounded-none border-2 border-neutral-900 shadow-[4px_4px_0px_0px_#171717] transition-all duration-120 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? "Logging in..." : "Log in"}
       </button>

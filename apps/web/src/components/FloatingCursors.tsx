@@ -22,7 +22,7 @@ function seededRandom(seed: number) {
   return x - Math.floor(x);
 }
 
-export default function FloatingCursors() {
+export default function FloatingCursors({ zIndex = "z-[9999]" }: { zIndex?: string }) {
   const [positions, setPositions] = useState<{x: number, y: number}[]>([
     { x: 0.1, y: 0.1 },
     { x: 0.9, y: 0.1 },
@@ -89,7 +89,7 @@ export default function FloatingCursors() {
     <AnimatePresence>
       {visible && (
         <div
-          className="fixed inset-0 pointer-events-none z-[9999] overflow-hidden"
+          className={`fixed inset-0 pointer-events-none overflow-hidden ${zIndex}`}
           aria-hidden="true"
         >
           {CURSORS.map((cursor, i) => {

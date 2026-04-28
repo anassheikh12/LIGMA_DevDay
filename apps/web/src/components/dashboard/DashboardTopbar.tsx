@@ -26,7 +26,7 @@ export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
   const initial = userName.trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <header className="sticky top-0 z-40 px-8 py-4 flex items-center justify-between bg-[#F5F1E4]/70 backdrop-blur-md border-b border-black/5">
+    <header className="sticky top-0 z-40 px-8 py-4 flex items-center justify-between bg-white/40 backdrop-blur-lg border-b-2 border-neutral-900">
       <Link
         href="/dashboard"
         className="text-2xl font-extrabold tracking-tight text-[#231F20]"
@@ -39,13 +39,8 @@ export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
         {/* Sticky-note avatar — small rotated yellow square with initial */}
         <div
           aria-label={userName}
-          className="w-10 h-10 flex items-center justify-center text-[#231F20] text-lg font-bold select-none"
+          className="w-10 h-10 flex items-center justify-center bg-neutral-900 border-2 border-neutral-900 text-white text-lg font-bold select-none shadow-[3px_3px_0px_0px_#171717] rounded-full"
           style={{
-            backgroundColor: "#FFD702",
-            transform: "rotate(-4deg)",
-            borderRadius: 3,
-            boxShadow:
-              "2px 3px 8px rgba(0,0,0,0.08), inset 0 -1px 0 rgba(0,0,0,0.05)",
             fontFamily: "var(--font-display)",
           }}
         >
@@ -56,7 +51,10 @@ export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="text-sm font-semibold text-[#6b6b6b] hover:text-[#231F20] transition-colors disabled:opacity-50 cursor-pointer"
+          className="bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-bold px-8 rounded-none border-2 border-neutral-900 shadow-[4px_4px_0px_0px_#171717] transition-all duration-120 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+          style={{
+            height: "48px",
+          }}
         >
           {loggingOut ? "Logging out..." : "Log out"}
         </button>
