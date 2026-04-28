@@ -1,171 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 @import "tailwindcss";
 
 /* ── LIGMA Brand Tokens ──────────────────────────────────────────────── */
 :root {
-  --color-cream: #f5f1e4;
-  --color-yellow: #ffd702;
+  --color-cream: #F5F1E4;
+  --color-yellow: #FFD702;
   --color-yellow-hover: #e6c200;
-  --color-ink: #1a1a1a;
+  --color-ink: #231F20;
   --color-muted: #6b6b6b;
+  --font-display: 'Bricolage Grotesque', var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), "Courier New", monospace;
+  --font-mono: var(--font-geist-mono), 'Courier New', monospace;
 }
 
 /* ── Base ─────────────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--color-cream);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-/* ── Spike Page ──────────────────────────────────────────────────────── */
-.spike-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
-  gap: 2rem;
+/* ── Scrollbar Styling ────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
 }
 
-.spike-header {
-  text-align: center;
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
 }
 
-.spike-title {
-  font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
-  line-height: 1.1;
+::-webkit-scrollbar-thumb {
+  background: rgba(35, 31, 32, 0.2);
+  border-radius: 4px;
 }
 
-.spike-title span {
-  color: var(--color-yellow);
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(35, 31, 32, 0.4);
 }
 
-.spike-subtitle {
-  margin-top: 0.5rem;
-  font-size: 0.95rem;
-  color: var(--color-muted);
-  max-width: 36rem;
-}
-
-/* ── Textarea Card ────────────────────────────────────────────────────── */
-.editor-card {
-  width: 100%;
-  max-width: 40rem;
-  background: #fff;
-  border-radius: 1rem;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04);
-  overflow: hidden;
-  transition: box-shadow 0.25s ease;
-}
-
-.editor-card:focus-within {
-  box-shadow: 0 0 0 3px var(--color-yellow), 0 4px 24px rgba(0, 0, 0, 0.08);
-}
-
-.editor-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid #eee;
-}
-
-.editor-toolbar-title {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--color-muted);
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  transition: all 0.3s ease;
-}
-
-.status-badge.connected {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.status-badge.connecting {
-  background: #fef9c3;
-  color: #854d0e;
-}
-
-.status-badge.disconnected {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  animation: pulse-dot 2s ease-in-out infinite;
-}
-
-.connected .status-dot {
-  background: #22c55e;
-}
-.connecting .status-dot {
-  background: #eab308;
-}
-.disconnected .status-dot {
-  background: #ef4444;
-}
-
-@keyframes pulse-dot {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
-}
-
-.editor-textarea {
-  width: 100%;
-  min-height: 18rem;
-  padding: 1.25rem;
-  border: none;
-  outline: none;
-  resize: vertical;
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.7;
+/* ── Selection ────────────────────────────────────────────────────────── */
+::selection {
+  background: var(--color-yellow);
   color: var(--color-ink);
-  background: transparent;
-}
-
-.editor-textarea::placeholder {
-  color: #bbb;
-}
-
-/* ── Footer ──────────────────────────────────────────────────────────── */
-.spike-footer {
-  font-size: 0.8rem;
-  color: var(--color-muted);
-  text-align: center;
-  max-width: 28rem;
-  line-height: 1.5;
-}
-
-.spike-footer code {
-  font-family: var(--font-mono);
-  background: rgba(0, 0, 0, 0.06);
-  padding: 0.15em 0.4em;
-  border-radius: 0.3em;
-  font-size: 0.85em;
 }

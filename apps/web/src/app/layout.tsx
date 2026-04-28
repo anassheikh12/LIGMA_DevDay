@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LIGMA — Real-Time Sync Spike",
+  title: "LIGMA — Ideate. Extract. Execute.",
   description:
-    "Yjs + WebSocket collaborative editing spike for the LIGMA project.",
+    "The collaborative workspace where ideas become action. Real-time sync, AI-powered extraction, and enterprise-grade security — all on a canvas of sticky notes.",
 };
 
 export default function RootLayout({
@@ -26,9 +26,22 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      style={{ scrollBehavior: "smooth" }}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body
+        style={{
+          backgroundColor: "#F5F1E4",
+          color: "#231F20",
+          margin: 0,
+          padding: 0,
+          minHeight: "100vh",
+          fontFamily: "var(--font-geist-sans), system-ui, -apple-system, sans-serif",
+          WebkitFontSmoothing: "antialiased",
+        }}
+      >
+        {children}
+      </body>
     </html>
   );
 }
