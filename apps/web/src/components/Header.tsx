@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-export default function Header() {
+interface HeaderProps {
+  setActiveOverlay: (overlay: string | null) => void;
+}
+
+export default function Header({ setActiveOverlay }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-[#F5F1E4]/70 backdrop-blur-md border-b border-black/5">
       {/* Logo */}
@@ -18,17 +22,17 @@ export default function Header() {
       {/* Nav Links */}
       <nav className="hidden md:flex items-center gap-8">
         {[
-          { name: "Documentation", href: "#" },
-          { name: "Architecture", href: "#process" },
-          { name: "About Us", href: "#" },
+          { name: "Documentation", id: "docs" },
+          { name: "Architecture", id: "architecture" },
+          { name: "About Us", id: "about" },
         ].map((link) => (
-          <Link
+          <button
             key={link.name}
-            href={link.href}
-            className="text-sm font-semibold text-[#6b6b6b] hover:text-[#231F20] transition-colors"
+            onClick={() => setActiveOverlay(link.id)}
+            className="text-sm font-semibold text-[#6b6b6b] hover:text-[#231F20] transition-colors cursor-pointer"
           >
             {link.name}
-          </Link>
+          </button>
         ))}
       </nav>
 

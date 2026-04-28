@@ -3,25 +3,29 @@
 import { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import { StickyNote } from "./StickyNote";
+import { Zap, Cpu, Lock } from "lucide-react";
 
 const NOTES = [
   {
-    title: "Real-time Sync via CRDTs",
-    desc: "Yjs-powered conflict-free data types ensure every collaborator sees changes instantly.",
-    color: "#FF8C00", // Dark orange
-    icon: "⚡",
+    title: "Conflict-Free Sync",
+    sub: "Powered by Yjs + CRDTs",
+    bullets: ["Zero-latency multi-user editing", "Automatic offline-to-online merging"],
+    color: "#FFD702",
+    Icon: Zap,
   },
   {
-    title: "AI Intent Extraction",
-    desc: "Gemini reads your sticky notes and extracts actionable tasks automatically.",
-    color: "#FFD702", // Primary yellow
-    icon: "🧠",
+    title: "Intent Extraction",
+    sub: "Google Gemini Pro Integration",
+    bullets: ["Natural language to task conversion", "Instant categorization & tagging"],
+    color: "#FFC107",
+    Icon: Cpu,
   },
   {
-    title: "Node-Level RBAC Security",
-    desc: "Fine-grained permissions on every node. Control who can view, edit, or delete.",
-    color: "#FF7F50", // Coral / bright orange
-    icon: "🔒",
+    title: "Granular Security",
+    sub: "Node-Level RBAC",
+    bullets: ["Secure shared workspace controls", "Full event-sourced change history"],
+    color: "#FFB300",
+    Icon: Lock,
   },
 ];
 
@@ -99,14 +103,30 @@ function FastTearNote({ note, index, progress }: {
   return (
     <motion.div style={{ position: "absolute", inset: 0, x, y, rotate, zIndex }}>
       <StickyNote color={note.color}>
-        <div className="flex flex-col h-full gap-4 pt-4">
-          <span className="text-3xl">{note.icon}</span>
-          <h3 className="font-display text-2xl font-bold text-[#231F20] leading-tight m-0">
-            {note.title}
-          </h3>
-          <p className="font-sans text-base text-[#231F20]/80 leading-relaxed max-w-[90%] m-0">
-            {note.desc}
-          </p>
+        {/* Top-right Icon */}
+        <div className="absolute top-6 right-6 text-[#231F20]/40">
+          <note.Icon size={28} strokeWidth={2.5} />
+        </div>
+
+        {/* Content Centered Vertically & Horizontally */}
+        <div className="flex flex-col h-full items-center justify-center text-center gap-6 py-8 px-4">
+          <div className="flex flex-col gap-2 items-center">
+            <h3 className="font-display text-3xl font-bold text-[#231F20] leading-tight m-0">
+              {note.title}
+            </h3>
+            <span className="font-mono text-[13px] font-bold text-[#231F20]/50 uppercase tracking-widest">
+              {note.sub}
+            </span>
+          </div>
+
+          <ul className="flex flex-col gap-4 text-left w-full max-w-[90%] mt-4">
+            {note.bullets.map((bullet, i) => (
+              <li key={i} className="flex items-start gap-3 font-sans text-[15px] font-medium text-[#231F20]/80 leading-snug">
+                <span className="text-[#231F20]/30 mt-0.5">•</span>
+                <span>{bullet}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </StickyNote>
     </motion.div>
