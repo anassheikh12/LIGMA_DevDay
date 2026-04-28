@@ -1,11 +1,37 @@
+"use client";
+
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+
+const USE_MOCK_API = true;
 
 interface HeaderProps {
   setActiveOverlay: (overlay: string | null) => void;
+  onAuthRequired: () => void;
 }
 
-export default function Header({ setActiveOverlay }: HeaderProps) {
+export default function Header({ setActiveOverlay, onAuthRequired }: HeaderProps) {
+  const router = useRouter();
+
+  const handleLaunch = async () => {
+    if (USE_MOCK_API) {
+      onAuthRequired();
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        router.push("/dashboard");
+      } else {
+        onAuthRequired();
+      }
+    } catch {
+      onAuthRequired();
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-4 bg-[#F5F1E4]/70 backdrop-blur-md border-b border-black/5">
       {/* Logo */}
@@ -38,11 +64,12 @@ export default function Header({ setActiveOverlay }: HeaderProps) {
 
       {/* Action */}
       <div className="flex items-center">
-        <Link href="/canvas">
-          <button className="bg-[#FFD702] hover:bg-[#e6c200] text-[#231F20] px-6 py-2.5 rounded-full text-sm font-bold shadow-[0_4px_14px_rgba(255,215,2,0.4)] transition-all hover:shadow-[0_6px_20px_rgba(255,215,2,0.5)] hover:-translate-y-0.5">
-            Launch App
-          </button>
-        </Link>
+        <button
+          onClick={handleLaunch}
+          className="bg-[#FFD702] hover:bg-[#e6c200] text-[#231F20] px-6 py-2.5 rounded-full text-sm font-bold shadow-[0_4px_14px_rgba(255,215,2,0.4)] transition-all hover:shadow-[0_6px_20px_rgba(255,215,2,0.5)] hover:-translate-y-0.5"
+        >
+          Launch App
+        </button>
       </div>
     </header>
   );

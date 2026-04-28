@@ -7,6 +7,7 @@ import HeroSection from "@/components/HeroSection";
 import PeelAwayStack from "@/components/PeelAwayStack";
 import CollaborativeWall from "@/components/CollaborativeWall";
 import Overlays from "@/components/Overlays";
+import AuthModal from "@/components/auth/AuthModal";
 
 const FloatingCursors = dynamic(() => import("@/components/FloatingCursors"), {
   ssr: false,
@@ -14,10 +15,14 @@ const FloatingCursors = dynamic(() => import("@/components/FloatingCursors"), {
 
 export default function LandingPage() {
   const [activeOverlay, setActiveOverlay] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
     <>
-      <Header setActiveOverlay={setActiveOverlay} />
+      <Header
+        setActiveOverlay={setActiveOverlay}
+        onAuthRequired={() => setShowAuthModal(true)}
+      />
       <Overlays activeOverlay={activeOverlay} setActiveOverlay={setActiveOverlay} />
       <FloatingCursors />
       <main>
@@ -25,6 +30,10 @@ export default function LandingPage() {
         <PeelAwayStack />
         <CollaborativeWall />
       </main>
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
     </>
   );
 }
