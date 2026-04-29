@@ -9,8 +9,12 @@ import { useCursorPresence } from "@/hooks/useCursorPresence";
 import { RemoteCursors } from "./RemoteCursors";
 import { EventLogPanel } from "./EventLogPanel";
 import { History } from "lucide-react";
+import { useMemo } from "react";
 
 type CanvasUser = { userId: string; name: string; color: string };
+
+const MEMBER_TOOLS = ['hand', 'draw', 'eraser'];
+const AUTHOR_TOOLS = [...MEMBER_TOOLS, 'note', 'geo', 'arrow'];
 
 function CanvasInner({ roomId, user }: { roomId: string; user: CanvasUser }) {
   useCursorPresence({ roomId, user });
@@ -38,8 +42,17 @@ export default function LigmaCanvas({
   const [editor, setEditor] = useState<Editor | null>(null);
   const [isLogOpen, setIsLogOpen] = useState(false);
 
-  const MEMBER_TOOLS = ['hand', 'draw', 'eraser'];
-  const AUTHOR_TOOLS = [...MEMBER_TOOLS, 'note', 'geo', 'arrow'];
+  const overrides = useMemo(() => ({
+    tools: (editor: Editor, tools: any) => {
+      if (role === 'LEAD') return tools;
+      const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
+      const filteredTools = { ...tools };
+      Object.keys(tools).forEach(key => {
+        if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
+      });
+      return filteredTools;
+    }
+  }), [role]);
 
   useEffect(() => {
     if (!editor || !doc) return;
@@ -118,17 +131,7 @@ export default function LigmaCanvas({
     };
   }, [editor, role, doc, user.userId, userName]);
 
-  const overrides: any = {
-    tools: (editor: Editor, tools: any) => {
-      if (role === 'LEAD') return tools;
-      const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
-      const filteredTools = { ...tools };
-      Object.keys(tools).forEach(key => {
-        if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
-      });
-      return filteredTools;
-    }
-  };
+
 
   useEffect(() => {
     if (editor && doc && awareness) {
