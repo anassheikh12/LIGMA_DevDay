@@ -45,13 +45,13 @@ export function RemoteCursors() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {Array.from(cursors.values()).map((cursor) => {
-        const screen = editor.pageToScreen({ x: cursor.x, y: cursor.y });
+        const viewport = editor.pageToViewport({ x: cursor.x, y: cursor.y });
         return (
           <div
             key={cursor.userId}
             className="absolute top-0 left-0"
             style={{
-              transform: `translate(${screen.x}px, ${screen.y}px)`,
+              transform: `translate(${viewport.x}px, ${viewport.y}px)`,
               transition: 'transform 50ms linear',
             }}
           >

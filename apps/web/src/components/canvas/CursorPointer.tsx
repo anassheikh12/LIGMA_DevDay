@@ -7,7 +7,7 @@ interface Props {
 
 export function CursorPointer({ color, name }: Props) {
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', left: '-3px', top: '-2.5px' }}>
       <svg
         width="22"
         height="24"
