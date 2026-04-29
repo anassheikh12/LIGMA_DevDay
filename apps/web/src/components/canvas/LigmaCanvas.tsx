@@ -41,70 +41,80 @@ export default function LigmaCanvas({
 
   const [editor, setEditor] = useState<Editor | null>(null);
   const [isLogOpen, setIsLogOpen] = useState(false);
+  const [isSynced, setIsSynced] = useState(false);
+  const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
 
-  const overrides = useMemo(() => ({
-    tools: (editor: Editor, tools: any) => {
-      if (role === 'LEAD') return tools;
-      const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
-      const filteredTools = { ...tools };
-      Object.keys(tools).forEach(key => {
-        if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
-      });
-      return filteredTools;
-    }
-  }), [role]);
+  // Sync Protection: Only enforce rules once roomMetadata is resolved
+  useEffect(() => {
+    if (!doc) return;
+    const roomMetadata = doc.getMap("roomMetadata");
+    const checkSync = () => {
+      const leadId = roomMetadata.get("leadId") as string;
+      if (leadId) {
+        setCurrentLeadId(leadId);
+        setIsSynced(true);
+      }
+    };
+    roomMetadata.observe(checkSync);
+    checkSync();
+    return () => roomMetadata.unobserve(checkSync);
+  }, [doc]);
+
+  const isActuallyLead = isSynced ? (currentLeadId === user.userId || role === 'LEAD') : true;
+
+  // Memoized UI Overrides to prevent flickering/disappearing UI
+  const overrides = useMemo(() => {
+    if (!isSynced) return {};
+    return {
+      tools: (editor: Editor, tools: any) => {
+        if (isActuallyLead) return tools;
+        const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
+        const filteredTools = { ...tools };
+        Object.keys(tools).forEach(key => {
+          if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
+        });
+        return filteredTools;
+      }
+    };
+  }, [isActuallyLead, isSynced, role]);
 
   useEffect(() => {
     if (!editor || !doc) return;
 
-    const roomMetadata = doc.getMap("roomMetadata");
-    const leadId = roomMetadata.get("leadId");
-    const isActuallyLead = leadId === user.userId || role === 'LEAD';
-
-    // 1. Selection Blocker (Prevents even selecting protected shapes)
-    const cleanupSelection = (editor.sideEffects as any).registerBeforeChangeHandler('instance_state', (prev: any, next: any, source: any) => {
-      if (source !== 'user' || isActuallyLead) return next;
-      
-      const newlySelected = next.selectedShapeIds.filter((id: string) => !prev.selectedShapeIds.includes(id));
-      if (newlySelected.length > 0) {
-        const hasForbidden = newlySelected.some((id: string) => {
-          const shape = editor.getShape(id as any);
-          return (shape as any)?.meta?.isAiGenerated || (shape as any)?.meta?.isLeadOnly;
-        });
-        
-        if (hasForbidden) {
-          window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'ACCESS DENIED: LEAD ONLY TASK' }));
-          return { ...next, selectedShapeIds: prev.selectedShapeIds };
+    // 1. Ghost Selection Lock (Intersects clicks)
+    const disposeGhostLock = editor.on('event', (event) => {
+      if (!isSynced || isActuallyLead) return;
+      if (event.name === 'pointer_down') {
+        const info = (event as any).info;
+        if (info?.target === 'shape') {
+          const shape = editor.getShape(info.shape.id as any);
+          if (shape?.meta?.isAiGenerated || shape?.meta?.isLeadOnly) {
+            editor.selectNone();
+            window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'COMMAND LEVEL INSUFFICIENT' }));
+          }
         }
       }
-      return next;
     });
 
-    // 2. Tool Enforcement
+    // 2. Tool Enforcement (Fallback)
     const disposeStore = editor.store.listen(({ changes }) => {
+      if (!isSynced || isActuallyLead) return;
       const { updated } = changes;
       if (Object.values(updated).some(([prev, next]: any) => 
-        prev.typeName === 'instance_state' && prev.activeToolId !== next.activeToolId
+        prev.typeName === 'instance' && prev.activeToolId !== next.activeToolId
       )) {
         const toolId = editor.getCurrentToolId();
-        const isAllowed = isActuallyLead || 
-                          (role === 'AUTHOR' && AUTHOR_TOOLS.includes(toolId)) ||
-                          (role === 'MEMBER' && MEMBER_TOOLS.includes(toolId)) ||
-                          toolId === 'select';
-
-        if (!isAllowed) {
-          editor.setCurrentTool('select');
-        }
+        const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
+        const isAllowed = allowed.includes(toolId) || toolId === 'select';
+        if (!isAllowed) editor.setCurrentTool('select');
       }
     }, { scope: 'local' } as any);
 
-    // 3. Event Logging (Who changed what and when)
+    // 3. Event Logging
     const roomLogs = doc.getArray("room-logs");
     const disposeLogging = editor.store.listen(({ changes }) => {
       const logEntry = (action: string, shape: any) => {
-        // Prevent doc growth by capping logs (last 100)
         if (roomLogs.length > 100) roomLogs.delete(0, 1);
-        
         roomLogs.push([{
           user: userName,
           action: action as any,
@@ -112,11 +122,8 @@ export default function LigmaCanvas({
           timestamp: Date.now()
         }]);
       };
-
       Object.values(changes.added).forEach(shape => logEntry('CREATED', shape));
       Object.values(changes.removed).forEach(shape => logEntry('DELETED', shape));
-      
-      // Throttle updates: Only log significant changes (like text edits)
       Object.values(changes.updated).forEach(([prev, next]: any) => {
         if (prev.typeName === 'shape' && (prev.props as any)?.text !== (next.props as any)?.text) {
           logEntry('UPDATED', next);
@@ -125,11 +132,11 @@ export default function LigmaCanvas({
     }, { source: 'user', scope: 'document' } as any);
 
     return () => {
-      cleanupSelection();
+      if (disposeGhostLock) (disposeGhostLock as any)();
       if (disposeStore) (disposeStore as any)();
       if (disposeLogging) (disposeLogging as any)();
     };
-  }, [editor, role, doc, user.userId, userName]);
+  }, [editor, isActuallyLead, isSynced, doc, userName, role]);
 
 
 
