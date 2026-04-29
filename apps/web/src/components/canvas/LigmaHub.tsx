@@ -1,18 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as Y from "yjs";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Send, 
-  Crown, 
-  Edit3, 
-  MessageSquare, 
-  Plus, 
-  Sparkles, 
-  Loader2, 
-  AlertCircle,
-  X 
+  Send, Crown, Edit3, MessageSquare, Plus, Sparkles, Loader2, AlertCircle, X 
 } from "lucide-react";
 import { Editor, createShapeId, TLShapePartial } from "tldraw";
 
@@ -34,35 +26,26 @@ interface LigmaHubProps {
 export default function LigmaHub({ doc, awareness, user, currentRole, editor }: LigmaHubProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"CHAT" | "AI">("CHAT");
-  
-  // Chat State
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatArray = doc.getArray<Message>("ligma-chat-v1");
 
-  // AI State
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
-  // Sync Chat Messages
   useEffect(() => {
     const updateMessages = () => {
       setMessages(chatArray.toArray());
-      if (!isOpen || activeTab !== "CHAT") {
-        setHasNewMessages(true);
-      }
+      if (!isOpen || activeTab !== "CHAT") setHasNewMessages(true);
     };
-
     chatArray.observe(updateMessages);
     setMessages(chatArray.toArray());
-
     return () => chatArray.unobserve(updateMessages);
   }, [chatArray, isOpen, activeTab]);
 
-  // Scroll to bottom when messages update
   useEffect(() => {
     if (isOpen && activeTab === "CHAT") {
       setHasNewMessages(false);
@@ -93,13 +76,14 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
   };
 
   const promoteUser = (name: string) => {
-    const states = Array.from(awareness.getStates().values()) as any[];
-    const targetState = states.find((s) => s.user?.name === name);
+    // FIX: Safely iterate through awareness states
+    const states = Array.from(awareness.getStates().entries());
+    const found = states.find(([_, state]: any) => state.user?.name === name);
 
-    if (targetState) {
+    if (found) {
       const systemMsg: Message = {
         sender: "SYSTEM",
-        text: `@${name} has been promoted to AUTHOR. Advanced tools unlocked.`,
+        text: `@${name} HAS BEEN PROMOTED TO AUTHOR.`,
         role: "SYSTEM",
         timestamp: Date.now(),
       };
@@ -121,50 +105,94 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
       });
 
       const data = await res.json();
-      
-      if (!res.ok) {
-        // Explicitly throw the error string from the server
-        throw new Error(data.error || `Error ${res.status}: Gemini is busy`);
-      }
+      if (!res.ok) throw new Error(data.error || "Gemini is busy");
 
+      // 1. DEDUPLICATION: Remove previous AI results
+      const oldAiShapes = editor.getCurrentPageShapes()
+        .filter((s: any) => s.meta?.isAiGenerated === true)
+        .map((s: any) => s.id);
+      if (oldAiShapes.length > 0) editor.deleteShapes(oldAiShapes);
+
+      const newShapes: any[] = [];
       const { ideas } = data;
       const center = editor.getViewportPageBounds().center;
       
-      const newShapes: TLShapePartial[] = ideas.map((idea: any, index: number) => {
-        const taskText = `📌 TASK: ${typeof idea === 'string' ? idea : JSON.stringify(idea)}`;
+      const categoryConfig: Record<string, { defaultColor: any; icon: string }> = {
+        Action: { defaultColor: "blue", icon: "⚡ [ACTION]" },
+        Research: { defaultColor: "violet", icon: "🔍 [RESEARCH]" },
+        Design: { defaultColor: "yellow", icon: "🎨 [DESIGN]" },
+      };
+
+      for (const [index, ideaObj] of (ideas as any[]).entries()) {
+        const textStr = (typeof ideaObj === 'string' ? ideaObj : ideaObj.text) || 'New Task';
+        const category = ideaObj.category || "Action";
+        const config = categoryConfig[category] || categoryConfig.Action;
+        const pageName = `Breakout: ${category}`;
         
-        return {
+        let targetPageId = (editor.getPages().find(p => p.name === pageName) as any)?.id;
+        if (!targetPageId) {
+          targetPageId = (editor.createPage({ name: pageName }) as any).id;
+        }
+
+        const contentText = `${config.icon} ${textStr}`;
+        console.log('Creating shape with text:', contentText);
+
+        const newShape = {
           id: createShapeId(),
-          type: "note",
-          x: center.x + (index - 1) * 250,
+          type: 'note',
+          x: center.x + (index - 2) * 220,
           y: center.y,
           props: {
-            richText: { 
-              type: 'doc', 
-              content: [{ 
-                type: 'paragraph', 
-                content: [{ type: 'text', text: taskText }] 
-              }] 
+            richText: {
+              type: 'doc',
+              content: [
+                {
+                  type: 'paragraph',
+                  content: [
+                    {
+                      type: 'text',
+                      text: contentText
+                    }
+                  ]
+                }
+              ]
             },
-            color: 'yellow',
+            color: config.defaultColor as any,
+            size: 'm',
             font: 'draw',
-            size: 'm'
+            align: 'middle',
+            verticalAlign: 'middle',
+            growY: 0
           },
+          meta: {
+            isTask: true,
+            isAiGenerated: true,
+            category: category,
+            creatorRole: 'lead'
+          }
         };
-      });
 
-      console.log("SENDING TO CANVAS (RichText):", JSON.stringify(newShapes, null, 2));
+        newShapes.push(newShape);
+        editor.createShapes([newShape as any]);
 
-      try {
-        editor.createShapes(newShapes);
-      } catch (shapeError) {
-        console.error("TLDRAW SCHEMA ERROR:", shapeError);
-        throw new Error("Canvas rejected the richText notes. Please try again.");
+        const isLead = currentRole?.toLowerCase() === 'lead';
+        (editor as any).updateShapes([{ id: newShape.id, isLocked: !isLead }]);
+
+        (editor as any).moveShapesToPage([newShape.id], targetPageId);
       }
-      
+
+      // 2. VISUAL FOCUS: Zoom to the new Battle Plan
+      const newShapeIds = newShapes.map(s => s.id);
+      if (newShapeIds.length > 0) {
+        const firstShapeId = newShapeIds[0];
+        const bounds = (editor as any).getShapePageBounds(firstShapeId);
+        if (bounds) {
+          (editor as any).zoomToBounds(bounds, { padding: 100, animation: { duration: 400 } });
+        }
+      }
+
       setAiPrompt("");
     } catch (err) {
-      console.error("AI GENERATION ERROR:", err);
       setAiError(err instanceof Error ? err.message : "Generation failed");
     } finally {
       setAiLoading(false);
@@ -177,6 +205,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
     return null;
   };
 
+  // Rest of your JSX (Return block) remains the same
   return (
     <div className="fixed bottom-6 right-6 z-[999999] flex flex-col items-end gap-4 pointer-events-none">
       {/* HUB WINDOW */}

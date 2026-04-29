@@ -48,8 +48,36 @@ export default function LigmaCanvas({
     };
 
     editor.on('current-tool-change', handleToolChange);
+
+    // RBAC: Block unauthorized edits to LeadOnly shapes
+    const cleanupChange = editor.sideEffects.registerBeforeChangeHandler('shape', (prev, next, source) => {
+      if (source !== 'user') return next;
+      if (!prev) return next; // Allow new shapes
+      
+      const isLeadOnly = prev.meta?.isLeadOnly === true;
+      if (isLeadOnly && role !== 'LEAD') {
+         window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'ACCESS DENIED: LEAD ONLY TASK' }));
+         return prev; // Block change
+      }
+      return next;
+    });
+
+    // RBAC: Block unauthorized deletions
+    const cleanupDelete = editor.sideEffects.registerBeforeDeleteHandler('shape', (shape, source) => {
+      if (source !== 'user') return true;
+      
+      const isLeadOnly = shape.meta?.isLeadOnly === true;
+      if (isLeadOnly && role !== 'LEAD') {
+         window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'ACCESS DENIED: LEAD ONLY TASK' }));
+         return false; // Block deletion
+      }
+      return true;
+    });
+
     return () => {
       editor.off('current-tool-change', handleToolChange);
+      cleanupChange();
+      cleanupDelete();
     };
   }, [editor, role]);
 

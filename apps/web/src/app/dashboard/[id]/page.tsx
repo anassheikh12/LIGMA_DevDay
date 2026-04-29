@@ -17,6 +17,10 @@ const LigmaHub = dynamic(() => import("@/components/canvas/LigmaHub"), {
   ssr: false,
 });
 
+const TaskPanel = dynamic(() => import("@/components/canvas/TaskPanel"), {
+  ssr: false,
+});
+
 type Room = {
   roomId: string;
   title: string;
@@ -217,13 +221,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       </main>
 
       {yData && (
-        <LigmaHub 
-          doc={yData.doc} 
-          awareness={yData.awareness} 
-          user={user} 
-          currentRole={role} 
-          editor={editor}
-        />
+        <>
+          <LigmaHub 
+            doc={yData.doc} 
+            awareness={yData.awareness} 
+            user={user} 
+            currentRole={role} 
+            editor={editor}
+          />
+          <TaskPanel editor={editor} />
+        </>
       )}
     </div>
   );

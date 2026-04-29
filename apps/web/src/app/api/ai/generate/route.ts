@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionFromRequest } from '@/lib/auth-helpers';
 
 export async function POST(req: NextRequest) {
-  console.log("AI ACTION: Initializing Gemini 3.1 Flash-Lite (2026 Stable)...");
+  console.log("AI ACTION: Reverting to Gemini 3 Flash (Standard)...");
   
-  let session = getSessionFromRequest(req);
-  
-  if (!session && process.env.NODE_ENV === 'development') {
-    session = { userId: "demo-user", name: "Anas Sheikh", email: "anas@ligma.ai" } as any;
-  }
+  const session = getSessionFromRequest(req);
 
   if (!session) {
     return NextResponse.json({ error: '401: Authentication required' }, { status: 401 });
@@ -22,8 +18,8 @@ export async function POST(req: NextRequest) {
   try {
     const { prompt } = await req.json();
 
-    // The 2026 model ID is gemini-3.1-flash-lite-preview
-    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite-preview:generateContent?key=${apiKey}`;
+    // Reverting to the Gemini 3 Flash endpoint
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash:generateContent?key=${apiKey}`;
 
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -31,14 +27,16 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         contents: [{
           parts: [{ 
-            text: `Return ONLY a JSON array of 3-6 strings representing brainstorming ideas for: ${prompt}. Example: ["Idea A", "Idea B"]` 
+            text: `Brainstorm 5 ideas for: ${prompt}. 
+            Return ONLY a JSON array of objects.
+            Each object must have: 
+            - "text": the idea string
+            - "category": one of ["Action Item", "Research", "Design"]
+            Example: [{"text": "Fix orbital friction", "category": "Action Item"}]` 
           }]
         }],
         generationConfig: {
           temperature: 0.8,
-          // Gemini 3 models support specific thinking levels; 
-          // we use 'minimal' for speed on sticky notes.
-          thinkingConfig: { thinkingLevel: 'minimal' }
         }
       })
     });
@@ -60,11 +58,23 @@ export async function POST(req: NextRequest) {
       throw new Error("AI failed to return a list format.");
     }
     
-    const ideas = JSON.parse(text.substring(start, end + 1));
+    const jsonString = text.substring(start, end + 1);
+    const ideas = JSON.parse(jsonString);
+
     return NextResponse.json({ ideas });
 
   } catch (error: any) {
     console.error("BACKEND CRASH:", error.message);
+    
+    if (process.env.NODE_ENV === 'development') {
+       return NextResponse.json({ 
+         ideas: [
+           { text: "Fix orbital node snapping logic", category: "Action Item" },
+           { text: "Design zero-G glassmorphism sidebar", category: "Design" },
+           { text: "Research spatial audio for canvas drift", category: "Research" }
+         ] 
+       });
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
