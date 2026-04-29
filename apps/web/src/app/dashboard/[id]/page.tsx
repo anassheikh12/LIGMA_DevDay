@@ -32,6 +32,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const { id: roomId } = use(params);
   const [user, setUser] = useState<User | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
+  const [membership, setMembership] = useState<{ color: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -61,7 +62,18 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         const res = await fetch(`/api/rooms/${roomId}`);
         if (res.ok) {
           const data = await res.json();
+          if (cancelled) return;
           setRoom(data);
+
+          const joinRes = await fetch(`/api/rooms/${roomId}/join`, { method: "POST" });
+          if (cancelled) return;
+          if (joinRes.ok) {
+            const joinData = await joinRes.json();
+            setMembership({ color: joinData.color });
+          } else {
+            router.push("/dashboard");
+            return;
+          }
         } else {
           router.push("/dashboard");
         }
@@ -69,7 +81,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         console.error(err);
         router.push("/dashboard");
       }
-      setLoading(false);
+      if (!cancelled) setLoading(false);
     })();
 
     return () => {
@@ -153,7 +165,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
     }
   };
 
-  if (loading || !user || !room) {
+  if (loading || !user || !room || !membership) {
     return (
       <div className="min-h-screen bg-surface-0 flex items-center justify-center">
         <div className="font-display text-2xl font-black animate-pulse uppercase tracking-tighter">
@@ -211,9 +223,10 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       {/* Canvas Area */}
       <main className="h-[calc(100vh-80px)] relative overflow-hidden">
         <div className="w-full h-full bg-white relative overflow-hidden">
-          <LigmaCanvas 
-            roomId={roomId} 
-            userName={user.name} 
+          <LigmaCanvas
+            roomId={roomId}
+            user={{ userId: user.userId, name: user.name, color: membership.color }}
+            userName={user.name}
             role={role}
             onEditorMount={onEditorMount}
           />

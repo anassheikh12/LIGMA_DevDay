@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(curl -s https://api.github.com/repos/anassheikh12/LIGMA_DevDay)",
+      "Bash(curl -s https://api.github.com/repos/anassheikh12/LIGMA_DevDay/branches)",
+      "Bash(curl -s \"https://api.github.com/repos/anassheikh12/LIGMA_DevDay/commits?sha=main&per_page=5\")",
+      "Bash(git stash *)",
+      "Bash(git pull *)",
+      "Bash(git -C \"E:/Frontend Practice/LIGMA_DevDay\" stash push -m \"auto-stash package-lock from bcryptjs install\" -- package-lock.json)",
+      "Bash(git -C \"E:/Frontend Practice/LIGMA_DevDay\" pull origin main)",
+      "Bash(git -C \"E:/Frontend Practice/LIGMA_DevDay\" stash pop)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}

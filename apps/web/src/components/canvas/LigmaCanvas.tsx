@@ -5,14 +5,25 @@ import "tldraw/tldraw.css";
 import { useYjsStore } from "./useYjsStore";
 import * as Y from "yjs";
 import { useEffect, useState } from "react";
+import { useCursorPresence } from "@/hooks/useCursorPresence";
+import { RemoteCursors } from "./RemoteCursors";
+
+type CanvasUser = { userId: string; name: string; color: string };
+
+function CanvasInner({ roomId, user }: { roomId: string; user: CanvasUser }) {
+  useCursorPresence({ roomId, user });
+  return <RemoteCursors />;
+}
 
 export default function LigmaCanvas({
   roomId,
+  user,
   userName,
   onEditorMount,
   role = "MEMBER",
 }: {
   roomId: string;
+  user: CanvasUser;
   userName: string;
   role?: string;
   onEditorMount?: (editor: Editor, doc: Y.Doc, awareness: any) => void;
@@ -113,7 +124,9 @@ export default function LigmaCanvas({
           setEditor(editor);
           editor.user.updateUserPreferences({ name: userName });
         }}
-      />
+      >
+        <CanvasInner roomId={roomId} user={user} />
+      </Tldraw>
     </div>
   );
 }
