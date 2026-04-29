@@ -81,22 +81,24 @@ export default function LigmaCanvas({
   useEffect(() => {
     if (!editor || !doc) return;
 
-    // 1. Ghost Selection Lock (Intersects clicks)
-    const disposeGhostLock = editor.on('event', (event) => {
-      if (!isSynced || isActuallyLead) return;
-      if (event.name === 'pointer_down') {
-        const info = (event as any).info;
-        if (info?.target === 'shape') {
-          const shape = editor.getShape(info.shape.id as any);
-          if (shape?.meta?.isAiGenerated || shape?.meta?.isLeadOnly) {
-            editor.selectNone();
-            window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'COMMAND LEVEL INSUFFICIENT' }));
-          }
+    // 1. Stable Selection Blocker (Prevents selection of protected shapes)
+    const disposeSelection = (editor.sideEffects as any).registerBeforeChangeHandler('instance', (prev: any, next: any, source: any) => {
+      if (source !== 'user' || isActuallyLead || !isSynced) return next;
+      const newlySelected = next.selectedShapeIds.filter((id: string) => !prev.selectedShapeIds.includes(id));
+      if (newlySelected.length > 0) {
+        const hasForbidden = newlySelected.some((id: string) => {
+          const shape = editor.getShape(id as any);
+          return (shape as any)?.meta?.isAiGenerated || (shape as any)?.meta?.isLeadOnly;
+        });
+        if (hasForbidden) {
+          window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'COMMAND LEVEL INSUFFICIENT' }));
+          return { ...next, selectedShapeIds: prev.selectedShapeIds };
         }
       }
+      return next;
     });
 
-    // 2. Tool Enforcement (Fallback)
+    // 2. Tool Enforcement
     const disposeStore = editor.store.listen(({ changes }) => {
       if (!isSynced || isActuallyLead) return;
       const { updated } = changes;
@@ -132,9 +134,9 @@ export default function LigmaCanvas({
     }, { source: 'user', scope: 'document' } as any);
 
     return () => {
-      if (disposeGhostLock) (disposeGhostLock as any)();
-      if (disposeStore) (disposeStore as any)();
-      if (disposeLogging) (disposeLogging as any)();
+      if (typeof disposeSelection === 'function') (disposeSelection as any)();
+      if (typeof disposeStore === 'function') (disposeStore as any)();
+      if (typeof disposeLogging === 'function') (disposeLogging as any)();
     };
   }, [editor, isActuallyLead, isSynced, doc, userName, role]);
 

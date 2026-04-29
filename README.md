@@ -1,123 +1,90 @@
-# LIGMA — Monorepo
+# LIGMA — Collaborative AI Canvas (DevDay '26)
 
 **Let's Integrate Groups, Manage Anything**
 
-A real-time collaborative workspace. This repo contains the technical spike proving Yjs CRDT sync over WebSockets.
+A high-performance, real-time collaborative workspace engineered for DevDay 2026. This project demonstrates advanced CRDT synchronization, Gemini-driven workflow automation, and a hardened Lead-Authority security model.
 
 ---
 
-## Repository Structure
+## 🏗️ Architecture & Tech Stack
 
-```
-ligma/
-├── apps/
-│   ├── web/          # Next.js 14 (App Router, Tailwind, TypeScript)
-│   └── realtime/     # Node.js + Express + Socket.IO + y-websocket
-├── package.json      # Workspaces root
-└── README.md
-```
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Frontend** | Next.js 16 (Turbopack) | Server-side rendering + lightning-fast builds |
+| **Canvas Engine** | tldraw SDK | Professional-grade infinite whiteboarding |
+| **Real-time Sync** | Yjs + y-websocket | Conflict-free Replicated Data Types (CRDTs) |
+| **AI Engine** | Gemini 1.5 Flash | Context-aware task generation and intent mapping |
+| **Infrastructure** | Node.js + Socket.IO | Awareness, cursor tracking, and RBAC signaling |
 
-## Quick Start
+---
 
-### Prerequisites
+## 🛡️ The "Lead Authority" Protocol
 
-- **Node.js 20+** and **npm**
+Designed to solve the "Collaborative Chaos" problem in remote teams.
+
+- **Protected States:** AI-generated tasks are tagged with immutable metadata.
+- **Ghost Lock:** Non-Lead users are physically restricted from selecting or modifying "Authority" shapes via an event-interception layer (`editor.selectNone()`).
+- **Zero-Latency Enforcement:** Permissions are validated locally on the client to ensure the UI remains snappy while maintaining strict access control.
+- **Visual Cues:** Locked shapes are automatically colored `grey` and non-leads receive `COMMAND LEVEL INSUFFICIENT` alerts upon interaction attempts.
+
+---
+
+## 📜 Real-Time Event Log
+
+Integrated a shared event logging system that tracks:
+- **Who:** Attribution via Yjs awareness.
+- **What:** Shape creation, deletion, and text updates.
+- **When:** High-precision timestamps synced across all clients.
+- **Performance:** Capped history (last 100 entries) to ensure the Yjs document remains lightweight.
+
+---
+
+## 🚀 Deployment & Environments
+
+LIGMA utilizes a decoupled architecture for maximum scalability:
+- **Web:** Hosted on Render (Next.js)
+- **Realtime:** Dedicated Node.js WebSocket server
+- **Key Env:** `NEXT_PUBLIC_REALTIME_URL` handles the handshake between the client and the sync engine.
+
+---
+
+## 🚦 Getting Started
 
 ### 1. Install Dependencies
-
 ```bash
-# From the repo root — installs both apps
-cd apps/realtime && npm install
-cd ../web && npm install
+# From the repo root
+npm install
 ```
 
-### 2. Start the Realtime Server (port 4000)
-
+### 2. Launch Services
 ```bash
-cd apps/realtime
-npm run dev
-```
+# Terminal 1: Sync Server
+cd apps/realtime && npm run dev
 
-You should see:
-
-```
-🚀  LIGMA Realtime running on http://localhost:4000
-    Yjs WebSocket:  ws://localhost:4000/<room-name>
-    Socket.IO:      http://localhost:4000/socket.io/
-```
-
-### 3. Start the Next.js Frontend (port 3000)
-
-In a **separate terminal**:
-
-```bash
-cd apps/web
-npm run dev
-```
-
-### 4. Test Real-Time Sync
-
-1. Open **http://localhost:3000** in two browser windows side by side.
-2. Type in one — it appears instantly in the other.
-3. The green **Connected** badge confirms the Yjs WebSocket link is active.
-
----
-
-## How It Works
-
-| Layer | Technology | Role |
-|-------|-----------|------|
-| CRDT Engine | **Yjs** (`Y.Text`) | Conflict-free merging of concurrent text edits |
-| Transport | **y-websocket** | Syncs Yjs documents over WebSocket |
-| Backend | **Express** + **ws** | HTTP health-check + WebSocket upgrade handler |
-| Frontend | **Next.js 14** (App Router) | React client with Yjs binding |
-| Styling | **Tailwind CSS** + custom tokens | LIGMA brand: Warm Cream `#F5F1E4`, Traffic Yellow `#FFD702` |
-
-### Conflict Resolution Strategy
-
-We use Yjs's **Y.Text** CRDT, which implements the YATA (Yet Another Transformation Approach) algorithm. Unlike Operational Transformation (OT), CRDTs achieve convergence through mathematically commutative, associative, and idempotent operations — meaning concurrent edits **always** merge correctly regardless of network ordering. No central authority is needed.
-
-### Architecture (Spike)
-
-```
-┌──────────────────────┐       WebSocket        ┌──────────────────────┐
-│  Next.js Frontend    │  ◄──────────────────►   │  Realtime Service    │
-│  (port 3000)         │    y-websocket proto    │  (port 4000)         │
-│                      │                         │                      │
-│  Y.Doc + Y.Text      │                         │  y-websocket server  │
-│  ↕ bound to textarea │                         │  + Express health    │
-└──────────────────────┘                         └──────────────────────┘
+# Terminal 2: Web Client
+cd apps/web && npm run dev
 ```
 
 ---
 
-## Environment Variables
+## 🎨 LIGMA Brand Identity
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `PORT` | `4000` | Realtime server port |
-| `ALLOWED_ORIGIN` | `http://localhost:3000` | CORS origin for Express |
-| `NEXT_PUBLIC_WS_URL` | `ws://localhost:4000` | WebSocket URL used by the frontend |
+- **Warm Cream (`#F5F1E4`):** Reduced eye strain for long sessions.
+- **Traffic Yellow (`#FFD702`):** Visual cues for action-oriented UI.
+- **Neo-Brutalist Ink:** Heavy borders (4px) and hard shadows for a bold developer aesthetic.
 
 ---
 
-## Brand Colors
+## ✅ DevDay '26 Progress
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| Warm Cream | `#F5F1E4` | Background |
-| Traffic Yellow | `#FFD702` | Accent, buttons, focus rings |
-| Ink | `#1A1A1A` | Primary text |
-| Muted | `#6B6B6B` | Secondary text |
+- [x] **Core:** Yjs CRDT Text & Canvas Sync
+- [x] **Security:** Lead Authority Selection Interceptor (Ghost Lock)
+- [x] **Intelligence:** Gemini Task Generation Integration
+- [x] **Presence:** Awareness-based Cursor & Presence tracking
+- [x] **Audit:** Shared Real-Time Event Logging
+- [ ] **Future:** Time-Travel Replay & MongoDB Persistence
 
 ---
 
-## Next Steps (Post-Spike)
-
-- [ ] Canvas with react-konva (sticky notes, connections)
-- [ ] Socket.IO for cursor presence + RBAC events
-- [ ] Event-sourced mutation log (MongoDB)
-- [ ] AI intent classification (Gemini API)
-- [ ] Task Board panel
-- [ ] Time-Travel Replay
-- [ ] Deploy to Render
+**Built for DevDay '26 @ FAST-NUCES.**  
+**Engineers:** Anas Sheikh, Hamza, Tahir, and Hammad.
