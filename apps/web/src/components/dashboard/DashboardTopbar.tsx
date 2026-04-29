@@ -4,12 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/auth-client";
+import { Menu } from "lucide-react";
 
 type DashboardTopbarProps = {
   userName: string;
+  onToggleSidebar?: () => void;
 };
 
-export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
+export default function DashboardTopbar({ userName, onToggleSidebar }: DashboardTopbarProps) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -26,16 +28,26 @@ export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
   const initial = userName.trim().charAt(0).toUpperCase() || "?";
 
   return (
-    <header className="sticky top-0 z-40 px-8 py-4 flex items-center justify-between bg-white/40 backdrop-blur-lg border-b-2 border-neutral-900">
-      <Link
-        href="/dashboard"
-        className="text-2xl font-extrabold tracking-tight text-[#231F20]"
-        style={{ fontFamily: "var(--font-display)" }}
-      >
-        LIGMA
-      </Link>
+    <header className="sticky top-0 z-40 px-4 md:px-8 py-4 flex items-center justify-between bg-white/40 backdrop-blur-lg border-b-2 border-neutral-900">
+      <div className="flex items-center gap-4">
+        {onToggleSidebar && (
+          <button 
+            onClick={onToggleSidebar}
+            className="md:hidden border-2 border-black bg-white shadow-[2px_2px_0px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none min-h-[44px] min-w-[44px] flex items-center justify-center"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+        <Link
+          href="/dashboard"
+          className="text-2xl font-extrabold tracking-tight text-[#231F20]"
+          style={{ fontFamily: "var(--font-display)" }}
+        >
+          LIGMA
+        </Link>
+      </div>
 
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-3 md:gap-5">
         {/* Sticky-note avatar — small rotated yellow square with initial */}
         <div
           aria-label={userName}
@@ -51,7 +63,7 @@ export default function DashboardTopbar({ userName }: DashboardTopbarProps) {
           type="button"
           onClick={handleLogout}
           disabled={loggingOut}
-          className="bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-bold px-8 rounded-none border-2 border-neutral-900 shadow-[4px_4px_0px_0px_#171717] transition-all duration-120 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+          className="bg-accent-yellow hover:bg-accent-yellow-hover text-ink font-bold px-4 md:px-8 rounded-none border-2 border-neutral-900 shadow-[4px_4px_0px_0px_#171717] transition-all duration-120 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none min-h-[44px] text-sm md:text-base"
           style={{
             height: "48px",
           }}

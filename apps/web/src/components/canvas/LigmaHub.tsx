@@ -142,6 +142,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
           type: 'note',
           x: center.x + (index - 2) * 220,
           y: center.y,
+          isLocked: true, // Lead Authority: Locked by default
           props: {
             richText: {
               type: 'doc',
@@ -157,7 +158,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
                 }
               ]
             },
-            color: config.defaultColor as any,
+            color: 'grey', // Visual indicator for locked/AI tasks
             size: 'm',
             font: 'draw',
             align: 'middle',
@@ -174,9 +175,6 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
 
         newShapes.push(newShape);
         editor.createShapes([newShape as any]);
-
-        const isLead = currentRole?.toLowerCase() === 'lead';
-        (editor as any).updateShapes([{ id: newShape.id, isLocked: !isLead }]);
 
         (editor as any).moveShapesToPage([newShape.id], targetPageId);
       }
@@ -207,7 +205,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
 
   // Rest of your JSX (Return block) remains the same
   return (
-    <div className="fixed bottom-6 right-6 z-[999999] flex flex-col items-end gap-4 pointer-events-none">
+    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[999999] flex flex-col items-end gap-4 pointer-events-none">
       {/* HUB WINDOW */}
       <AnimatePresence>
         {isOpen && (
@@ -215,7 +213,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="w-80 h-[400px] bg-white border-4 border-black shadow-[12px_12px_0px_0px_#000] flex flex-col overflow-hidden pointer-events-auto mb-2"
+            className="w-[calc(100vw-32px)] md:w-80 h-[60svh] md:h-[400px] bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] md:shadow-[12px_12px_0px_0px_#000] flex flex-col overflow-hidden pointer-events-auto mb-2"
           >
             {/* Header */}
             <div className="px-3 py-1 bg-black flex justify-between items-center">
@@ -233,7 +231,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
             <div className="flex border-b-2 border-black">
               <button
                 onClick={() => setActiveTab("CHAT")}
-                className={`flex-1 py-2 font-display font-black text-[10px] tracking-widest transition-colors ${
+                className={`flex-1 py-3 md:py-2 min-h-[44px] font-display font-black text-[10px] tracking-widest transition-colors ${
                   activeTab === "CHAT" ? "bg-yellow-400" : "bg-white hover:bg-neutral-100"
                 }`}
               >
@@ -242,7 +240,7 @@ export default function LigmaHub({ doc, awareness, user, currentRole, editor }: 
               <div className="w-[2px] bg-black" />
               <button
                 onClick={() => setActiveTab("AI")}
-                className={`flex-1 py-2 font-display font-black text-[10px] tracking-widest transition-colors ${
+                className={`flex-1 py-3 md:py-2 min-h-[44px] font-display font-black text-[10px] tracking-widest transition-colors ${
                   activeTab === "AI" ? "bg-yellow-400" : "bg-white hover:bg-neutral-100"
                 }`}
               >

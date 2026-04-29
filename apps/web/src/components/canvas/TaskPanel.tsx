@@ -81,7 +81,7 @@ export default function TaskPanel({ editor }: { editor: Editor | null }) {
   };
 
   return (
-    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-[999999] flex flex-col items-start pointer-events-none">
+    <div className="fixed left-4 md:left-6 top-1/2 -translate-y-1/2 z-[999999] flex flex-col items-start pointer-events-none">
        {/* THE TRIGGER BUTTON */}
        <button 
          onClick={() => setIsOpen(!isOpen)}
@@ -96,7 +96,7 @@ export default function TaskPanel({ editor }: { editor: Editor | null }) {
              initial={{ x: -100, opacity: 0 }}
              animate={{ x: 0, opacity: 1 }}
              exit={{ x: -100, opacity: 0 }}
-             className="pointer-events-auto w-64 max-h-[60vh] bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col overflow-hidden"
+             className="pointer-events-auto w-[calc(100vw-32px)] md:w-64 max-h-[60vh] bg-white border-4 border-black shadow-[8px_8px_0px_0px_#000] flex flex-col overflow-hidden"
            >
              <div className="p-3 bg-black text-white flex items-center justify-between">
                 <span className="font-display font-black text-xs uppercase tracking-widest italic">TASK // BOARD</span>

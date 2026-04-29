@@ -106,6 +106,12 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       role: initialRole,
     });
 
+    // Shared Room Metadata (Lead Authority)
+    const roomMetadata = yData.doc.getMap("roomMetadata");
+    if (isLead) {
+      roomMetadata.set("leadId", user.userId);
+    }
+
     const handleAwarenessUpdate = () => {
       const states = Array.from(awareness.getStates().values()) as any[];
       const myState = states.find((s) => s.user?.userId === user.userId);
@@ -176,7 +182,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   }
 
   return (
-    <div className="h-screen flex flex-col bg-surface-0 bg-dot-grid overflow-hidden">
+    <div className="h-[100svh] flex flex-col bg-surface-0 bg-dot-grid overflow-hidden">
       {/* Toast Notification */}
       {toast && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[20000] bg-black text-[#00FF00] border-4 border-black shadow-[8px_8px_0px_0px_#000] px-6 py-3 flex items-center gap-3 animate-bounce">
@@ -186,34 +192,32 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       )}
 
       {/* Room Header */}
-      <header className="h-20 border-b-4 border-black bg-white flex items-center justify-between px-8 relative z-[10001]">
-        <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="font-display text-2xl font-black italic tracking-tighter hover:text-ink-muted transition-colors">
+      <header className="flex-none border-b-4 border-black bg-white flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-3 md:py-0 md:h-20 relative z-[10001] gap-3 md:gap-0">
+        <div className="flex items-center justify-between w-full md:w-auto">
+          <Link href="/dashboard" className="font-display text-xl md:text-2xl font-black italic tracking-tighter hover:text-ink-muted transition-colors mr-4">
             LIGMA {"//"}
           </Link>
           
-          <div className="flex items-center gap-4">
-             <div className="bg-accent-yellow border-2 border-black px-6 py-2 shadow-[4px_4px_0px_0px_#000] flex items-center gap-2">
-                {role === "LEAD" ? <Crown className="w-4 h-4" /> : role === "AUTHOR" ? <Edit3 className="w-4 h-4" /> : null}
-                <span className="font-display font-black uppercase italic text-sm tracking-tight">
-                   {role}: {room.title}
-                </span>
-             </div>
+          <div className="bg-accent-yellow border-2 border-black px-4 md:px-6 py-1.5 md:py-2 shadow-[4px_4px_0px_0px_#000] flex items-center gap-2">
+            {role === "LEAD" ? <Crown className="w-4 h-4" /> : role === "AUTHOR" ? <Edit3 className="w-4 h-4" /> : null}
+            <span className="font-display font-black uppercase italic text-xs md:text-sm tracking-tight truncate max-w-[150px] md:max-w-xs">
+              {role}: {room.title}
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-3">
-            <button onClick={handleToggleGrid} className="px-4 py-2 bg-white hover:bg-neutral-100 font-black text-[10px] uppercase border-2 border-black shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+        <div className="w-full md:w-auto overflow-x-auto pb-2 md:pb-0" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex items-center gap-2 md:gap-3 min-w-max">
+            <button onClick={handleToggleGrid} className="min-h-[44px] px-4 py-2 bg-white hover:bg-neutral-100 font-black text-[10px] uppercase border-2 border-black shadow-[2px_2px_0px_0px_#000] md:shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
               GRID
             </button>
-            <button onClick={handleCopyCode} className={`px-4 py-2 font-black text-[10px] uppercase border-2 border-black shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${copiedCode ? 'bg-lime-400' : 'bg-white hover:bg-neutral-100'}`}>
-              {copiedCode ? 'CODE COPIED' : 'COPY CODE'}
+            <button onClick={handleCopyCode} className={`min-h-[44px] px-4 py-2 font-black text-[10px] uppercase border-2 border-black shadow-[2px_2px_0px_0px_#000] md:shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${copiedCode ? 'bg-lime-400' : 'bg-white hover:bg-neutral-100'}`}>
+              {copiedCode ? 'COPIED' : 'CODE'}
             </button>
-            <button onClick={handleCopyLink} className={`px-4 py-2 font-black text-[10px] uppercase border-2 border-black shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${copiedLink ? 'bg-lime-400' : 'bg-cyan-400 hover:bg-cyan-500'}`}>
-              {copiedLink ? 'LINK COPIED' : 'COPY LINK'}
+            <button onClick={handleCopyLink} className={`min-h-[44px] px-4 py-2 font-black text-[10px] uppercase border-2 border-black shadow-[2px_2px_0px_0px_#000] md:shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none ${copiedLink ? 'bg-lime-400' : 'bg-cyan-400 hover:bg-cyan-500'}`}>
+              {copiedLink ? 'COPIED' : 'LINK'}
             </button>
-            <button onClick={() => router.push("/dashboard")} className="px-4 py-2 bg-white hover:bg-neutral-100 font-black text-[10px] uppercase border-2 border-black shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
+            <button onClick={() => router.push("/dashboard")} className="min-h-[44px] px-4 py-2 bg-white hover:bg-neutral-100 font-black text-[10px] uppercase border-2 border-black shadow-[2px_2px_0px_0px_#000] md:shadow-[4px_4px_0px_0px_#000] transition-all active:translate-x-[2px] active:translate-y-[2px] active:shadow-none">
               LEAVE
             </button>
           </div>
@@ -221,8 +225,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       </header>
 
       {/* Canvas Area */}
-      <main className="h-[calc(100vh-80px)] relative overflow-hidden">
-        <div className="w-full h-full bg-white relative overflow-hidden">
+      <main className="flex-1 relative overflow-hidden">
+        <div className="absolute inset-0 bg-white overflow-hidden">
           <LigmaCanvas
             roomId={roomId}
             user={{ userId: user.userId, name: user.name, color: membership.color }}
