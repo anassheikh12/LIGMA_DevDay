@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@tldraw/tldraw": "^4.5.10",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",

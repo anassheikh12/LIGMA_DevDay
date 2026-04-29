@@ -109,13 +109,7 @@ export default function CollaborativeWall() {
         className="relative z-[999] mt-auto"
       >
         <Link href="/canvas" className="no-underline">
-          <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0 12px 40px rgba(255,215,2,0.5)" }}
-            whileTap={{ scale: 0.97 }}
-            className="font-display text-[clamp(1rem,2.5vw,1.25rem)] font-bold text-[#231F20] bg-[#FFD702] border-none px-12 py-4 rounded-full cursor-pointer tracking-wide shadow-[0_8px_30px_rgba(255,215,2,0.4),_0_2px_8px_rgba(0,0,0,0.1)] transition-shadow duration-300"
-          >
-            Enter Workspace →
-          </motion.button>
+         
         </Link>
       </motion.div>
     </section>

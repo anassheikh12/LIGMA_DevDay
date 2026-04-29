@@ -26,12 +26,18 @@ export function useYjsStore({
   });
 
   const [status, setStatus] = useState({ type: 'loading' });
+  const [yData, setYData] = useState<{ doc: Y.Doc; awareness: any } | null>(null);
 
   useEffect(() => {
     const doc = new Y.Doc();
     const provider = new WebsocketProvider(hostUrl, roomId, doc, {
       connect: true,
     });
+    
+    // Initialize chat array
+    doc.getArray('ligma-chat-v1');
+
+    setYData({ doc, awareness: provider.awareness });
 
     const yStore = doc.getMap<TLRecord>('tldraw');
 
@@ -102,5 +108,5 @@ export function useYjsStore({
     };
   }, [roomId, hostUrl, store]);
 
-  return store;
+  return { store, doc: yData?.doc, awareness: yData?.awareness };
 }

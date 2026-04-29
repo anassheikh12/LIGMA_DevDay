@@ -1,30 +1,89 @@
 "use client";
 
-import { Tldraw, Editor } from "tldraw";
+import { Tldraw, Editor, TldrawUiOverrides, ToolbarItem, DefaultToolbar, DefaultToolbarContent } from "tldraw";
 import "tldraw/tldraw.css";
 import { useYjsStore } from "./useYjsStore";
+import * as Y from "yjs";
+import { useEffect, useState } from "react";
 
 export default function LigmaCanvas({
   roomId,
   userName,
   onEditorMount,
+  role = "MEMBER",
 }: {
   roomId: string;
   userName: string;
-  onEditorMount?: (editor: Editor) => void;
+  role?: string;
+  onEditorMount?: (editor: Editor, doc: Y.Doc, awareness: any) => void;
 }) {
-  const store = useYjsStore({
+  const { store, doc, awareness } = useYjsStore({
     roomId,
     hostUrl: "ws://localhost:4000",
   });
+
+  const [editor, setEditor] = useState<Editor | null>(null);
+
+  // Tool definitions
+  const MEMBER_TOOLS = ['hand', 'draw', 'eraser'];
+  const AUTHOR_TOOLS = [...MEMBER_TOOLS, 'note', 'geo', 'arrow'];
+  const LEAD_TOOLS = ['all']; // Full access
+
+  useEffect(() => {
+    if (!editor) return;
+
+    const handleToolChange = () => {
+      const toolId = editor.getCurrentToolId();
+      
+      const isAllowed = role === 'LEAD' || 
+                        (role === 'AUTHOR' && AUTHOR_TOOLS.includes(toolId)) ||
+                        (role === 'MEMBER' && MEMBER_TOOLS.includes(toolId)) ||
+                        toolId === 'select';
+
+      if (!isAllowed) {
+        window.dispatchEvent(new CustomEvent('ligma-toast', { detail: 'COMMAND LEVEL INSUFFICIENT' }));
+        // Revert to select tool
+        editor.setCurrentTool('select');
+      }
+    };
+
+    editor.on('current-tool-change', handleToolChange);
+    return () => {
+      editor.off('current-tool-change', handleToolChange);
+    };
+  }, [editor, role]);
+
+  const overrides: TldrawUiOverrides = {
+    tools: (editor, tools) => {
+      if (role === 'LEAD') return tools;
+      
+      const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
+      const filteredTools = { ...tools };
+      
+      Object.keys(tools).forEach(key => {
+        if (!allowed.includes(key) && key !== 'select') {
+          delete filteredTools[key];
+        }
+      });
+      
+      return filteredTools;
+    }
+  };
+
+  useEffect(() => {
+    if (editor && doc && awareness) {
+      onEditorMount?.(editor, doc, awareness);
+    }
+  }, [editor, doc, awareness, onEditorMount]);
 
   return (
     <div className="w-full h-full border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white overflow-hidden relative">
       <Tldraw
         store={store}
+        overrides={overrides}
         onMount={(editor) => {
+          setEditor(editor);
           editor.user.updateUserPreferences({ name: userName });
-          onEditorMount?.(editor);
         }}
       />
     </div>
