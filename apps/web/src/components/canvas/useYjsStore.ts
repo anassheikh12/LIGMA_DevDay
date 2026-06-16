@@ -30,7 +30,8 @@ export function useYjsStore({
 
   useEffect(() => {
     const doc = new Y.Doc();
-    const provider = new WebsocketProvider(hostUrl, roomId, doc, {
+    const wsUrl = hostUrl.startsWith('http') ? hostUrl.replace(/^http/, 'ws') : hostUrl;
+    const provider = new WebsocketProvider(wsUrl, roomId, doc, {
       connect: true,
     });
     

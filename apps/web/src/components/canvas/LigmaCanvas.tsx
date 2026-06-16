@@ -45,72 +45,24 @@ export default function LigmaCanvas({
   const [currentLeadId, setCurrentLeadId] = useState<string | null>(null);
 
   // Sync Protection: Only enforce rules once roomMetadata is resolved
-useEffect(() => {
-    if (!editor || !doc) return;
-
-    // 1. GHOST LOCK: Listen for selection changes
-    const unlisten = editor.on('event', (event) => {
-      const roomMetadata = doc.getMap("roomMetadata");
+  useEffect(() => {
+    if (!doc) return;
+    const roomMetadata = doc.getMap("roomMetadata");
+    const checkSync = () => {
       const leadId = roomMetadata.get("leadId");
-      
-      // RE-EVALUATE EVERY EVENT: Am I the lead?
-      // We check the Metadata OR the hard-coded role prop
-      const isActuallyLead = role === 'LEAD' || (leadId !== undefined && leadId === user.userId);
-
-      // IF I AM THE LEAD, STOP HERE. DO NOT RUN LOCK LOGIC.
-      if (isActuallyLead) return;
-
-      // FOR MEMBERS ONLY:
-      if (event.name === 'change' || event.name.includes('pointer')) {
-        const selectedIds = editor.getSelectedShapeIds();
-        
-        if (selectedIds.length > 0) {
-          const isTryingToTouchRestricted = selectedIds.some((id) => {
-            const shape = editor.getShape(id);
-            return shape?.meta?.isAiGenerated || shape?.meta?.isLeadOnly;
-          });
-
-          if (isTryingToTouchRestricted) {
-            editor.selectNone();
-            window.dispatchEvent(new CustomEvent('ligma-toast', { 
-              detail: 'COMMAND LEVEL INSUFFICIENT' 
-            }));
-          }
-        }
+      if (leadId !== undefined) {
+        setCurrentLeadId(leadId as string);
+        setIsSynced(true);
       }
-    });
+    };
 
-    // 2. TOOL PROTECTION
-    const cleanupStore = editor.store.listen(({ changes }) => {
-      const roomMetadata = doc.getMap("roomMetadata");
-      const leadId = roomMetadata.get("leadId");
-      const isActuallyLead = role === 'LEAD' || (leadId !== undefined && leadId === user.userId);
-
-      if (isActuallyLead) return;
-      
-      const { updated } = changes;
-      const isInstanceUpdate = Object.values(updated).some(([prev, next]: any) => 
-        (prev.typeName === 'instance' || prev.typeName === 'instance_state') && 
-        prev.activeToolId !== next.activeToolId
-      );
-
-      if (isInstanceUpdate) {
-        const toolId = editor.getCurrentToolId();
-        const allowed = (role === 'AUTHOR' && AUTHOR_TOOLS.includes(toolId)) ||
-                        (role === 'MEMBER' && MEMBER_TOOLS.includes(toolId)) ||
-                        toolId === 'select' || toolId === 'hand';
-
-        if (!allowed) {
-          editor.setCurrentTool('select');
-        }
-      }
-    }, { scope: 'local' } as any);
+    roomMetadata.observe(checkSync);
+    checkSync(); // run initial check
 
     return () => {
-      if (typeof unlisten === 'function') unlisten();
-      if (typeof cleanupStore === 'function') cleanupStore();
+      roomMetadata.unobserve(checkSync);
     };
-  }, [editor, role, doc, user.userId]);
+  }, [doc]);
 
   const isActuallyLead = isSynced ? (currentLeadId === user.userId || role === 'LEAD') : true;
 
@@ -134,8 +86,9 @@ useEffect(() => {
     if (!editor || !doc) return;
 
     // 1. Stable Selection Blocker (Prevents selection of protected shapes)
-    const disposeSelection = (editor.sideEffects as any).registerBeforeChangeHandler('instance', (prev: any, next: any, source: any) => {
+    const disposeSelection = (editor.sideEffects as any).registerBeforeChangeHandler('instance_page_state', (prev: any, next: any, source: any) => {
       if (source !== 'user' || isActuallyLead || !isSynced) return next;
+      if (!prev?.selectedShapeIds || !next?.selectedShapeIds) return next;
       const newlySelected = next.selectedShapeIds.filter((id: string) => !prev.selectedShapeIds.includes(id));
       if (newlySelected.length > 0) {
         const hasForbidden = newlySelected.some((id: string) => {

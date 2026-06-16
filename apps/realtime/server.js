@@ -19,9 +19,12 @@ const app = express();
 const server = http.createServer(app);
 
 // ── CORS ────────────────────────────────────────────────────────────────
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || "http://localhost:3000";
-
-app.use(cors({ origin: ALLOWED_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    callback(null, true);
+  },
+  credentials: true
+}));
 
 // ── MongoDB (lazy, cached) ──────────────────────────────────────────────
 let mongoClientPromise = null;
@@ -44,7 +47,9 @@ app.get("/", (_req, res) => {
 // ── Socket.IO ───────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: ALLOWED_ORIGIN,
+    origin: (origin, callback) => {
+      callback(null, true);
+    },
     methods: ["GET", "POST"],
     credentials: true,
   },
