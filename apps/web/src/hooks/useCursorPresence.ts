@@ -28,7 +28,7 @@ export function useCursorPresence({ roomId, user }: Args): void {
   useEffect(() => {
     if (!user || !editor) return;
 
-    const socket = connectSocket();
+    const socket = connectSocket({ userId: user.userId, name: user.name });
 
     const onJoin = () => {
       socket.emit('room:join', { roomId });

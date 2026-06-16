@@ -57,19 +57,44 @@ const io = new Server(server, {
 
 // JWT auth middleware: parse `ligma-session` cookie from the handshake,
 // verify it, and stash userId/name on socket.data.
+// If cookie is blocked (e.g. cross-domain third-party cookie block), fall back to handshake auth.
 io.use((socket, next) => {
   try {
     const rawCookie = socket.handshake.headers.cookie;
-    if (!rawCookie) return next(new Error("unauthorized"));
-    const cookies = cookie.parse(rawCookie);
-    const token = cookies["ligma-session"];
-    if (!token) return next(new Error("unauthorized"));
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    if (!payload || !payload.userId || !payload.name) {
+    let userId = null;
+    let name = null;
+
+    if (rawCookie) {
+      try {
+        const cookies = cookie.parse(rawCookie);
+        const token = cookies["ligma-session"];
+        if (token) {
+          const payload = jwt.verify(token, process.env.JWT_SECRET);
+          if (payload && payload.userId && payload.name) {
+            userId = payload.userId;
+            name = payload.name;
+          }
+        }
+      } catch (err) {
+        // ignore cookie verification failure, try auth payload fallback
+      }
+    }
+
+    // Fallback to handshake auth (useful in production cross-domain envs where cookies are blocked)
+    if (!userId || !name) {
+      const auth = socket.handshake.auth;
+      if (auth && auth.userId && auth.name) {
+        userId = auth.userId;
+        name = auth.name;
+      }
+    }
+
+    if (!userId || !name) {
       return next(new Error("unauthorized"));
     }
-    socket.data.userId = payload.userId;
-    socket.data.name = payload.name;
+
+    socket.data.userId = userId;
+    socket.data.name = name;
     next();
   } catch {
     next(new Error("unauthorized"));

@@ -22,8 +22,11 @@ export function getSocket(): Socket {
   return socket;
 }
 
-export function connectSocket() {
+export function connectSocket(authData?: { userId: string; name: string }) {
   const s = getSocket();
+  if (authData) {
+    s.auth = authData;
+  }
   if (!s.connected) s.connect();
   return s;
 }
