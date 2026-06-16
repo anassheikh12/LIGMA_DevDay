@@ -4,12 +4,11 @@ import { Tldraw, Editor } from "tldraw";
 import "tldraw/tldraw.css";
 import { useYjsStore } from "./useYjsStore";
 import * as Y from "yjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useCursorPresence } from "@/hooks/useCursorPresence";
 import { RemoteCursors } from "./RemoteCursors";
 import { EventLogPanel } from "./EventLogPanel";
 import { History } from "lucide-react";
-import { useMemo } from "react";
 
 type CanvasUser = { userId: string; name: string; color: string };
 
@@ -36,7 +35,7 @@ export default function LigmaCanvas({
 }) {
   const { store, doc, awareness } = useYjsStore({
     roomId,
-    hostUrl: process.env.NEXT_PUBLIC_REALTIME_URL || "ws://localhost:3001",
+    hostUrl: process.env.NEXT_PUBLIC_REALTIME_URL || "http://localhost:4000",
   });
 
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -66,21 +65,27 @@ export default function LigmaCanvas({
 
   const isActuallyLead = isSynced ? (currentLeadId === user.userId || role === 'LEAD') : true;
 
-  // Memoized UI Overrides to prevent flickering/disappearing UI
-  const overrides = useMemo(() => {
-    if (!isSynced) return {};
-    return {
-      tools: (editor: Editor, tools: any) => {
-        if (isActuallyLead) return tools;
-        const allowed = role === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
-        const filteredTools = { ...tools };
-        Object.keys(tools).forEach(key => {
-          if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
-        });
-        return filteredTools;
-      }
-    };
-  }, [isActuallyLead, isSynced, role]);
+  // ─── STABLE OVERRIDES ──────────────────────────────────────────────────────
+  // Keep latest permission values in a ref so the overrides object never
+  // changes its reference. Changing the `overrides` prop on <Tldraw> causes
+  // it to reinitialise the editor, which is what makes the canvas "vanish"
+  // right when isSynced flips (i.e. exactly on first user interaction).
+  const permissionsRef = useRef({ isActuallyLead, isSynced, role });
+  permissionsRef.current = { isActuallyLead, isSynced, role };
+
+  // Created once with useState — guaranteed stable object reference forever.
+  const [overrides] = useState(() => ({
+    tools: (_editor: Editor, tools: any) => {
+      const { isActuallyLead: lead, isSynced: synced, role: r } = permissionsRef.current;
+      if (!synced || lead) return tools;
+      const allowed = r === 'AUTHOR' ? AUTHOR_TOOLS : MEMBER_TOOLS;
+      const filteredTools = { ...tools };
+      Object.keys(tools).forEach((key) => {
+        if (!allowed.includes(key) && key !== 'select') delete filteredTools[key];
+      });
+      return filteredTools;
+    },
+  }));
 
   useEffect(() => {
     if (!editor || !doc) return;
@@ -107,7 +112,7 @@ export default function LigmaCanvas({
     const disposeStore = editor.store.listen(({ changes }) => {
       if (!isSynced || isActuallyLead) return;
       const { updated } = changes;
-      if (Object.values(updated).some(([prev, next]: any) => 
+      if (Object.values(updated).some(([prev, next]: any) =>
         prev.typeName === 'instance' && prev.activeToolId !== next.activeToolId
       )) {
         const toolId = editor.getCurrentToolId();
@@ -171,7 +176,7 @@ export default function LigmaCanvas({
       </Tldraw>
 
       {/* Event Log Toggle */}
-      <button 
+      <button
         onClick={() => setIsLogOpen(!isLogOpen)}
         className="absolute right-6 top-6 z-[99999] w-12 h-12 bg-black text-white border-2 border-white shadow-[4px_4px_0px_0px_#000] flex items-center justify-center hover:bg-neutral-800 transition-all"
       >
@@ -179,10 +184,10 @@ export default function LigmaCanvas({
       </button>
 
       {doc && (
-        <EventLogPanel 
-          doc={doc} 
-          isOpen={isLogOpen} 
-          onClose={() => setIsLogOpen(false)} 
+        <EventLogPanel
+          doc={doc}
+          isOpen={isLogOpen}
+          onClose={() => setIsLogOpen(false)}
         />
       )}
     </div>
