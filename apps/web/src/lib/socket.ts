@@ -4,7 +4,16 @@ let socket: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socket) {
-    const url = process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
+    let url = process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
+    
+    // Sanitize protocol for Socket.IO
+    if (url.startsWith('ws')) {
+      url = url.replace(/^ws/, 'http');
+    } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
+      url = `${protocol}//${url}`;
+    }
+
     socket = io(url, {
       withCredentials: true,
       autoConnect: false,
