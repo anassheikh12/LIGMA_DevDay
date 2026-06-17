@@ -8,7 +8,9 @@ let socket: Socket | null = null;
  * upgrades to a WebSocket connection.
  */
 function getRealtimeHttpUrl(): string {
-  let url = process.env.NEXT_PUBLIC_REALTIME_URL ?? 'http://localhost:4000';
+  let url = (typeof window !== 'undefined' && (window as any).__REALTIME_URL__) || 
+            process.env.NEXT_PUBLIC_REALTIME_URL ?? 
+            'http://localhost:4000';
 
   // Strip trailing slashes
   url = url.replace(/\/+$/, '');

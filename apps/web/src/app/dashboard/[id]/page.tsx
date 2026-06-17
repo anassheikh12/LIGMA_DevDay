@@ -40,6 +40,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [yData, setYData] = useState<{ doc: Y.Doc; awareness: any } | null>(null);
   const [role, setRole] = useState<string>("MEMBER");
   const [toast, setToast] = useState<string | null>(null);
+  const [realtimeUrl, setRealtimeUrl] = useState<string | null>(null);
 
   const onEditorMount = useCallback((editor: Editor, doc: Y.Doc, awareness: any) => {
     setEditor(editor);
@@ -57,6 +58,19 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         return;
       }
       setUser(me);
+
+      try {
+        // Fetch config at runtime to get the real non-baked NEXT_PUBLIC_REALTIME_URL
+        const configRes = await fetch("/api/config");
+        if (configRes.ok) {
+          const configData = await configRes.json();
+          if (!cancelled) {
+            setRealtimeUrl(configData.realtimeUrl);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load runtime config:", err);
+      }
 
       try {
         const res = await fetch(`/api/rooms/${roomId}`);
@@ -227,13 +241,16 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       {/* Canvas Area */}
       <main className="flex-1 relative overflow-hidden">
         <div className="absolute inset-0 bg-white overflow-hidden">
-          <LigmaCanvas
-            roomId={roomId}
-            user={{ userId: user.userId, name: user.name, color: membership.color }}
-            userName={user.name}
-            role={role}
-            onEditorMount={onEditorMount}
-          />
+          {realtimeUrl && (
+            <LigmaCanvas
+              roomId={roomId}
+              user={{ userId: user.userId, name: user.name, color: membership.color }}
+              userName={user.name}
+              role={role}
+              onEditorMount={onEditorMount}
+              realtimeUrl={realtimeUrl}
+            />
+          )}
         </div>
       </main>
 

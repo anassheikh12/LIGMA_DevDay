@@ -26,16 +26,22 @@ export default function LigmaCanvas({
   userName,
   onEditorMount,
   role = "MEMBER",
+  realtimeUrl,
 }: {
   roomId: string;
   user: CanvasUser;
   userName: string;
   role?: string;
   onEditorMount?: (editor: Editor, doc: Y.Doc, awareness: any) => void;
+  realtimeUrl?: string;
 }) {
+  if (typeof window !== 'undefined' && realtimeUrl) {
+    (window as any).__REALTIME_URL__ = realtimeUrl;
+  }
+
   const { store, doc, awareness } = useYjsStore({
     roomId,
-    hostUrl: process.env.NEXT_PUBLIC_REALTIME_URL || "http://localhost:4000",
+    hostUrl: realtimeUrl || process.env.NEXT_PUBLIC_REALTIME_URL || "http://localhost:4000",
   });
 
   const [editor, setEditor] = useState<Editor | null>(null);
