@@ -9,7 +9,7 @@ let socket: Socket | null = null;
  */
 function getRealtimeHttpUrl(): string {
   let url = (typeof window !== 'undefined' && (window as any).__REALTIME_URL__) || 
-            process.env.NEXT_PUBLIC_REALTIME_URL ?? 
+            process.env.NEXT_PUBLIC_REALTIME_URL || 
             'http://localhost:4000';
 
   // Strip trailing slashes
